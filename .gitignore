@@ -1,2 +1,3 @@
 /mast/parser
-
+**/__pycache__/**
+**/.antlr/**
