@@ -4,6 +4,7 @@ from parser.MastLexer import MastLexer
 from MastErrorListener import MastErrorListener
 import unittest
 import io
+from file_data import file_one, file_two
 
 class TestMastParser(unittest.TestCase):
 
@@ -35,10 +36,10 @@ class TestMastParser(unittest.TestCase):
         self.assertEqual(self.errorListener.count, 0)
 
     def test_valid_label(self):
-        self.expect_valid("=== fred ====", "label")
-        
-
-
+        self.expect_valid("=== fred ====", "label_stmt")
+        self.expect_valid("=== replace: fred ====", "label_stmt")
+        # as stmt
+        self.expect_valid("=== replace: fred ====", "stmt")
 
     def test_valid_jump(self):
         self.expect_valid("jump fred", "jump_stmt")
@@ -47,19 +48,39 @@ class TestMastParser(unittest.TestCase):
         self.expect_valid("jump fred if fred(f,w+e)", "jump_stmt")
         self.expect_valid("->    fred", "jump_stmt")
         self.expect_valid("->fred", "jump_stmt")
+        # as stmt
+        self.expect_valid("->fred", "stmt")
+
+    def test_valid_assign(self):
+        self.expect_valid("fred = 3", "assign_stmt")
+        self.expect_valid("fred += 3", "assign_stmt")
+        # as stmt
+        self.expect_valid("fred += 3", "stmt")
 
     
         
     def test_valid_end(self):
-        self.expect_valid("->END", "end")
-        self.expect_valid("->  END", "end")
+        self.expect_valid("->END", "end_stmt")
+        self.expect_valid("->  END", "end_stmt")
+        # as stmt
+        self.expect_valid("->END", "stmt")
 
     def test_valid_import(self):
         self.expect_valid("import story.mast", "import_stmt")
         self.expect_valid("from test.mastlib import story.mast", "import_stmt")
         self.expect_valid("from example/test.mastlib import story.mast", "import_stmt")
         self.expect_valid("from example/test.mastlib import example/story.mast", "import_stmt")
+        # as stmt
+        self.expect_valid("from example/test.mastlib import example/story.mast", "stmt")
 
+    def test_valid_delay(self):
+        self.expect_valid("delay SIM 5s", "delay_stmt")
+
+
+    def test_valid_file(self):
+        self.expect_valid(file_one, "file_input")
+        self.expect_valid(file_two, "file_input")
+        
 
     def test_invalid_jump(self):
         parser = self.setup("jump +fre")

@@ -1,5 +1,15 @@
 grammar Mast;
 
+// Comment
+fragment COMMENT
+ : '#' ~[\r\n\f]*
+ ;
+
+ fragment SPACES              
+ : [ \t];                 // line whitespace
+
+
+
 STRING
  : STRING_LITERAL
  //| BYTES_LITERAL
@@ -34,8 +44,12 @@ fragment ID_CONTINUE    : ID_START
                         ;        // match usual identifier spec
 
 
-//FILE_NAME       : ('.' | '/' | '_' | [a-zA-Z])('.' | '/' | '_' |[a-zA-Z0-9])+;        // match usual identifier spec
-WS              : [ \t] -> skip;                 // line whitespace
+
+// Things to ignore
+SKIP_              : (SPACES | COMMENT) -> skip;                 
+//
+///
+///
 LABEL_MARKER    : '==' '='+
                 | '??' '?'+;
 NEWLINE        : ( '\r'? '\n' | '\r' | '\f' );
@@ -81,6 +95,7 @@ OPER            : MATH_OPER
                 | LOGIC_OPER
                 | BITWISE_OPER
                 ;
+CLOCK : ('GUI' | 'SIM' | 'APP' | 'TEST') ;
 
 NAME
                 : ID_START ID_CONTINUE*
@@ -186,7 +201,10 @@ IMAG_NUMBER
 label_stmt           : LABEL_MARKER 'replace:'? NAME LABEL_MARKER; 
 
 
-
+//
+/// EXPR
+///
+//
 test: or_test ('if' or_test 'else' test)? ;
 test_nocond: or_test ;
 //test_nocond: or_test | lambdef_nocond;
@@ -250,53 +268,133 @@ comp_for: 'for' exprlist 'in' or_test (comp_iter)?;
 //comp_for: (ASYNC)? 'for' exprlist 'in' or_test (comp_iter)?;
 comp_if: 'if' test_nocond (comp_iter)?;
 
-// jump, push , pop,
+
+
+
+
+
 // end
-end             : '->' 'END';
+end_stmt             : '->' 'END'  inline_if?;
+// return if
+return_stmt             : '->' 'RETURN'  inline_if?;
+// yield
+yield_stmt             : '->' 'YIELD'  inline_if?;
+// fail
+fail_stmt             : '->' 'FAIL'  inline_if?;
+
+success_stmt             : '->' 'SUCCESS'  inline_if?;
 
 inline_if       : 'if' test;
 
+// jump, push , pop,
 jump_stmt       : 'jump' NAME inline_if? 
                 | '->' NAME inline_if?
                 ;
-
+//
+// import
+//
 import_stmt: import_name | import_from;
 import_name: 'import' file_name;
 // note below: the ('.' | '...') is necessary because '...' is tokenized as ELLIPSIS
 import_from: 'from' file_name 'import' file_name;
 file_name: dotted_name ('/' dotted_name)*;
 dotted_name: NAME ('.' NAME)*;
-
-// log
-// logger
-// loop - start, break, end, 
+//
 // if (else, elif, end_if)
+//
+if_stmt: 'if' test ':'; 
+elif_stmt: 'elif' test ':' ;
+else_stmt: 'else' ':';
+end_if_stmt: 'end_if';
+
+// loop - start, break, end, 
+for_stmt: 'for' NAME 'in' test ':';
+while_stmt: 'for' NAME 'while' test ':';
+next_stmt: 'next' NAME;
+break_stmt: 'break';
+continue_stmt: 'continue';
+// timeout
+timeout_stmt: 'timeout:';
+// log
+log_stmt        : 'log' STRING
+                | 'log' 'name' NAME STRING
+                ;
+// delay
+//seconds         : INTEGER 's';
+//minutes         : INTEGER 'm';
+
+delay_stmt      :  'delay' CLOCK  NUMBER 's'
+                //|  'delay'  minutes
+                //|  'delay'  ('gui' | 'sim' | 'app' | 'test')  seconds minutes
+                ;
+
+
+//
+// Assign
+//
+assign_stmt:  NAME trailer* augassign expr ;
+function_stmt:  NAME trailer*;
+
+augassign       : ('=' 
+                |'+=' 
+                | '-=' 
+                | '*=' 
+                | '@=' 
+                | '/=' 
+                | '%=' 
+                | '&=' 
+                | '|=' 
+                | '^=' 
+                | '<<=' 
+                | '>>=' 
+                | '**=' 
+                | '//='
+                );
+
+
+
+
+// logger
 // match, case, end_match
 // PyCode, do
-// import
-// Comment
-// Marker - obsolete
-// Assign
 
-// return if
-// fail
-// yield
-// delay
+// Marker - obsolete
 // parallel
 // end_await
-// timeout
 // await fail 
 // await cond
 // cancel
 
 
-
-
-
-stmt            : (label_stmt | jump_stmt | import_stmt) ;
+stmt            : (label_stmt 
+                | delay_stmt
+                | end_stmt 
+                | return_stmt 
+                | yield_stmt 
+                | fail_stmt
+                | success_stmt
+                | jump_stmt 
+                | import_stmt 
+                | if_stmt 
+                | elif_stmt 
+                | else_stmt 
+                | end_if_stmt 
+                | for_stmt 
+                | while_stmt 
+                | next_stmt
+                | break_stmt
+                | continue_stmt
+                | timeout_stmt
+                
+                | log_stmt
+                
+                // Late
+                
+                | assign_stmt
+                | function_stmt
+                ) ;
 
 
 file_input: (NEWLINE | stmt)* EOF;
-
 
 
