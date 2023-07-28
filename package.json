@@ -3,6 +3,7 @@
     "version": "1.0.0",
     "author": "Your Name <email@example.com>",
     "scripts": {
-        "update": "cd mast&&antlr4 -Dlanguage=Python3 Mast.g4 -o ./parser"
+        "update": "cd mast&&antlr4 -Dlanguage=Python3 Mast.g4 -o ./parser",
+        "gui": "cd mast&&antlr4-parse Mast.g4 file_input -gui < examples\\story.mast"
     }
 }

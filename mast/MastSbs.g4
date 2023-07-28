@@ -1,10 +1,10 @@
-grammar MastSbs;
+parser grammar MastSbs;
 
 import MastCore;
 
 
-route_stmt      : 'route' (
-                        DESTORY
+route_stmt      : ROUTE (
+                        DESTROY
                         | SPAWN
                         | DAMAGE INTERNAL
                         | DAMAGE  OBJECT
@@ -18,15 +18,15 @@ route_stmt      : 'route' (
                     name
                 ;
 
-follow_stmt      : 'follow' 'route' (
-                        DESTORY
+follow_stmt      : FOLLOW ROUTE (
+                        DESTROY
                         | SPAWN
                         | DAMAGE INTERNAL
                         | DAMAGE  OBJECT
                         | GRID  SPAWN
                         )
                         name
-                | 'follow' 'route' (
+                | FOLLOW ROUTE (
                         | COMMS  SELECT
                         | SCIENCE  SELECT
                         | WEAPONS  SELECT
@@ -43,22 +43,22 @@ timeout_opts    : TIMEOUT SECONDS_TIME_NUMBER MINUTES_TIME_NUMBER?
                 ;
 
 // Allow options in any order
-trans_recv_opts : face_opts? color_opts ? title_opts?
-                | face_opts?  title_opts? color_opts ?
-                | color_opts ? title_opts? face_opts?
-                | color_opts ? face_opts? title_opts?
-                | title_opts? color_opts? face_opts?
-                | title_opts? face_opts? color_opts?
+trans_recv_opts : face_opts color_opts ? title_opts?
+                | face_opts  title_opts? color_opts ?
+                | color_opts title_opts? face_opts?
+                | color_opts face_opts? title_opts?
+                | title_opts color_opts? face_opts?
+                | title_opts face_opts? color_opts?
                 ;
 
-trans_recv_stmt       : ('transmit'| 'receive') STRING trans_recv_opts
-                    | ('transmit'| 'receive') name name STRING trans_recv_opts
+trans_recv_stmt     : (TRANSMIT| RECEIVE) name name STRING trans_recv_opts?
+                    | (TRANSMIT| RECEIVE) STRING trans_recv_opts?
                     ;
 
 broadcast_stmt       : 'have' name 'broadcast' STRING color_opts?
                     ;
 
-comms_info_stmt     : 'comms_info' STRING color_opts?
+comms_info_stmt     : COMMS_INFO STRING color_opts?
                     ;
 
 
@@ -66,12 +66,12 @@ comms_opts      : color_opts timeout_opts?
                 | timeout_opts color_opts?
                 ;
 
-await_comms_stmt    : 'await' COMMS STRING comms_opts? ':'
-                    | 'await' name COMMS name STRING comms_opts? ':'
+await_comms_stmt    : 'await' COMMS comms_opts? ':'
+                    | 'await' name COMMS name comms_opts? ':'
                     ;
 
-await_scan_stmt  : 'await' SCAN STRING (FOG NUMBER)? ':'
-                    | 'await' name SCAN name STRING (FOG NUMBER)? ':'
+await_scan_stmt  : 'await' SCAN (FOG NUMBER)? ':'
+                    | 'await' name SCAN name (FOG NUMBER)? ':'
                     ;
 
 scan_result_stmt   :  SCAN RESULT STRING
@@ -83,7 +83,7 @@ scan_tab_stmt       :  SCAN TAB STRING comp_for? inline_if? ':'
 button_stmt         :  ('+'|'*') STRING color_opts? comp_for? inline_if? ':'
                     ;
 
-simulation_stmt     : 'simulation' (CREATE|PAUSE|RESUME) ;
+simulation_stmt     : SIMULATION (CREATE|PAUSE|RESUME) ;
 
 sbs_stmt        : route_stmt
                 | follow_stmt

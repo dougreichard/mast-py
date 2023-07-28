@@ -4,6 +4,7 @@ from parser.MastLexer import MastLexer
 from MastErrorListener import MastErrorListener
 import unittest
 import io
+import os
 from file_data import file_one, file_two
 
 class TestMastParser(unittest.TestCase):
@@ -85,6 +86,12 @@ class TestMastParser(unittest.TestCase):
         self.expect_valid(file_one, "file_input")
         self.expect_valid(file_two, "file_input")
         
+        for root, dirs, files in os.walk('./mast/examples'):
+            for name in files:
+                with open(os.path.join(root, name)) as f:
+                    s = f.read( )
+                    self.expect_valid(s, "file_input")
+
 
     def test_invalid_jump(self):
         parser = self.setup("jump +fre")

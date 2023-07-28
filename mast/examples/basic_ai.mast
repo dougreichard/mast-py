@@ -1,0 +1,177 @@
+#
+# route spawn will call the specify label when something is spawned
+# This allows the system to test what type of item it is
+# typically using roles or other attributes
+#
+# NOTE: More than one route spawn can exist
+#
+route spawn route_spawn
+
+#
+# The route_spawn label is the entry point 
+# it examines the SPAWNED_ID to either
+# jump to another label proper for that item
+# or END which stops running this task/flow 
+#
+========== route_spawn =========
+
+#
+# AI for the player is the docking logic
+#
+jump player_docking if has_role(SPAWNED_ID, "__player__")
+jump ai_task_friendly if has_roles(SPAWNED_ID, "tsn, friendly")
+jump spawn_task_station if has_roles(SPAWNED_ID, "tsn, station")
+jump task_npc_targeting if has_role(SPAWNED_ID, "raider")
+
+#### ELSE don't run a task
+->END
+
+
+#
+# This is for enemy AI
+# For now this is in priority
+#  - if surrendered go back to the spawn point
+#  - a player ship that comms enraged
+#  - a player that is withing 2000
+#  - or a stations
+#
+========== task_npc_targeting === 
+enraged = get_inventory_value(SPAWNED_ID, "enrage_value")
+scanned = get_inventory_value(SPAWNED_ID, "SCANNED")
+surrendered = has_role(SPAWNED_ID, "surrendered")
+if surrendered:
+    so = to_object(SPAWNED_ID)
+    do target_pos(sim, SPAWNED_ID, so.spawn_pos.x, so.spawn_pos.y, so.spawn_pos.z)
+    # TODO: When it reaches spawn_pos tally and remove
+    ->END
+end_if
+
+#
+# This is naive and assume players are on one side
+#
+if not scanned: 
+    should_scan = closest(SPAWNED_ID, role("PlayerShip"), 5000)
+    if should_scan is not None:
+        follow route science select should_scan SPAWNED_ID
+    end_if
+end_if
+
+#
+# Comms enraged this npc, But enraged is time limited
+#
+the_target = None
+if enraged is not None:
+    # if still enraged, use its target
+    clear = True
+    if enraged[0] > sim.time_tick_counter:
+        the_target = enraged[1]
+        if object_exists(sim, the_target):
+            clear = False           
+        else:
+            clear = True
+            the_target = None
+        end_if
+    end_if
+    if clear:
+        # clear the enraged value
+        do set_inventory_value(SPAWNED_ID, "enrage_value", None)
+    end_if
+end_if
+
+#
+# Look for a station near 
+#
+if the_target is None:
+    the_target = closest(SPAWNED_ID, role("Station") & role("tsn"), 3000)
+end_if
+#
+# Look for a player near 
+#
+if the_target is None:
+    the_target = closest(SPAWNED_ID, role("PlayerShip"), 3000)
+end_if
+#
+# Otherwise look for a tsn station
+#
+if the_target is None:
+    the_target = closest(SPAWNED_ID, role("Station") & role("tsn"))
+end_if
+#
+# If any of these check resulted in a target
+#
+if the_target is not None:
+
+    distance = sbs.distance_id(SPAWNED_ID, to_id(the_target))
+    throt = 1
+    if distance < 500:
+    throt = 0
+    end_if
+
+    do target(sim, SPAWNED_ID, the_target, True, throt)
+end_if
+#
+# Call this logic again in 5 seconds
+#
+delay sim 5s
+-> task_npc_targeting
+
+
+
+#
+# AI for friendly tsn ships (not citizen ships)
+#
+========== ai_task_friendly ===== 
+
+#
+# Comms can give orders to attack a target (or approach another friendly) 
+#
+the_target = get_inventory_value(SPAWNED_ID, "TARGET_ID", None)
+
+scanned = get_inventory_value(SPAWNED_ID, "SCANNED")
+#
+# This is naive and assume players are on one side
+#
+if not scanned: 
+    should_scan = closest(SPAWNED_ID, role("PlayerShip"), 5000)
+    if should_scan is not None:
+        follow route science select should_scan SPAWNED_ID
+    end_if
+end_if
+
+#
+# Only shoot raiders
+#            
+if the_target is not None:
+    shoot = has_role(the_target, "raider")
+
+    distance = sbs.distance_id(SPAWNED_ID,to_id(the_target))
+    throt = 1
+    if distance < 500:
+    throt = 0
+    end_if
+
+    do target(sim, SPAWNED_ID, the_target, shoot, throt)
+
+end_if
+
+#
+# call this logic every 5 seconds
+#
+delay sim 5s
+-> ai_task_friendly
+
+================ spawn_task_station ================= 
+
+
+my_players = role("__player__") & role("tsn")
+for player in my_players:
+    blob = get_engine_data_set(sim, player)
+    num_ids = blob.get("num_extra_scan_sources",0)
+    do blob.set("extra_scan_source", SPAWNED_ID, num_ids)
+    num_ids += 1
+    do blob.set("num_extra_scan_sources",num_ids,0)
+
+    follow route science select player SPAWNED_ID
+
+next player
+-> END

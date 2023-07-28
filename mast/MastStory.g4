@@ -52,7 +52,7 @@ await_choice_stmt   : 'await' CHOICE ':'
                     | 'await' CHOICE SET name ':'
                     ;
 // Only legal in a complex await?
-disconnect_stmt   : 'disconnect' ':' ;
+disconnect_stmt   : DISCONNECT ':' ;
 
 button_opts : data_opts inline_if? style_opts?
             | inline_if style_opts? data_opts?
@@ -85,7 +85,7 @@ await_select_stmt       : 'await' SELECT (COMMS|WEAPONS|SCIENCE) ;
 on_change_stmt  : ON CHANGE expr ':' ;
 end_on_stmt :  END_ON ;
 
-gui_text_stmt : LONG_STRING_LITERAL ;
+gui_text_stmt : LONG_STRING_LITERAL | STRING ;
 gui_append_text_stmt : GUI_APPEND_TEXT_STRING ;
 
 // original had a page option, never implmented

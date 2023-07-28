@@ -20,12 +20,15 @@ class MastErrorListener(ErrorListener):
 
 
     def reportAmbiguity(self, recognizer, dfa, startIndex, stopIndex, exact, ambigAlts, configs):
+        #self.count += 1
         pass
 
     def reportAttemptingFullContext(self, recognizer, dfa, startIndex, stopIndex, conflictingAlts, configs):
+        #self.count += 1
         pass
 
     def reportContextSensitivity(self, recognizer, dfa, startIndex, stopIndex, prediction, configs):
+        #self.count += 1
         pass
 
     @property        

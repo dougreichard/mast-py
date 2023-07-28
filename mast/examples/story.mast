@@ -1,0 +1,205 @@
+## 
+# Example shows reusable common client select
+import common_console_select.mast
+import common_docking.mast
+import science.mast
+import comms.mast
+import internal_damage.mast
+import basic_ai.mast
+import grid_ai.mast
+import siege.mast
+import extra_gui.mast
+import game_results.mast
+import damage.mast
+
+#
+# This directs the script 
+# to the client and server GUI
+# when the client is started
+#
+reroute server start_server 
+reroute clients client_main
+
+
+#
+# Uncomment to enable logging via the log command
+#
+#logger
+
+
+shared start_text =~~"""
+Legendary Missions:
+
+Missions rich in the history of Artemis re-imagined for for the Cosmos.
+
+
+Written using MAST and is a great reference for those looking to write their own missions.
+"""~~
+
+#
+# Game data
+#
+shared game_started = False
+shared enemy_count=5
+shared player_count = 1
+shared player_list = ~~[
+    MastDataObject({"name": "Artemis", "id": None, "side": "tsn", "ship": "tsn_battle_cruiser", "spawn_point": (200,0,0) , "face": random_terran()}),
+    MastDataObject({"name": "Intrepid", "id": None, "side": "tsn", "ship": "tsn_battle_cruiser", "spawn_point": (300,0, -100), "face": random_terran()}),
+    MastDataObject({"name": "Aegis", "id": None, "side": "tsn", "ship": "tsn_battle_cruiser" , "spawn_point": (500,0, -200), "face": random_terran()}),
+    MastDataObject({"name": "Horatio", "id": None, "side": "tsn", "ship": "tsn_battle_cruiser" , "spawn_point": (700,0, -300), "face": random_terran()}),
+    MastDataObject({"name": "Excalibur", "id": None, "side": "tsn", "ship": "tsn_battle_cruiser", "spawn_point": (-200,0,0) , "face": random_terran()}),
+    MastDataObject({"name": "Hera", "id": None, "side": "tsn", "ship": "tsn_battle_cruiser", "spawn_point":  (-300,0,-100), "face": random_terran()}),
+    MastDataObject({"name": "Ceres", "id": None, "side": "tsn", "ship": "tsn_battle_cruiser", "spawn_point": (-500,0, -200) , "face": random_terran()}),
+    MastDataObject({"name": "Diana", "id": None , "side": "tsn", "ship": "tsn_battle_cruiser", "spawn_point": (-700,0, -300), "face": random_terran()}),
+]~~
+
+
+#
+# The Server GUI
+#   This label runs once, to initialize server data
+#
+========== start_server ===============
+
+shared world_select = "siege"
+shared terrain_select = "few"
+shared friendly_select = "few"
+shared anomaly_select = "none"
+
+watch_end_game_task = None
+
+
+#
+# The Server GUI
+#
+====== show_server_menu =====
+
+if watch_end_game_task is not None:
+    cancel watch_end_game_task
+    watch_end_game_task = None
+end_if
+
+section style="area: 5, 10, 50, 90;"
+"""""{start_text}"""""
+
+section style="area: 50, 10, 95,90;row-height:75px;padding:0px,10px"
+""" justify:right;text:Difficulty """
+
+
+intslider enemy_count "low: 1.0;high:11.0"
+row
+blank
+row
+
+""" justify:right;text:Player ships """
+intslider player_count "low: 1.0;high:8.0"
+row
+blank
+row
+
+""" justify:right;text:Mission Type"""
+dropdown world_select "text: Mission type;list:siege,single front,double front,deep strike,peacetime,border war,infestation":
+end_dropdown
+row
+
+"""justify:right;text:Terrain"""
+dropdown terrain_select "text: Terrain;list:none, few,some, lots, many":
+end_dropdown
+row
+
+"""justify:right;text:Friendly Ships"""
+dropdown friendly_select "text: Friendly Ships;list:none, few,some, lots, many":
+end_dropdown
+row
+
+"""justify:right;text:Anomalies"""
+dropdown anomaly_select_select "text: Anomalies;list:none, few,some, lots, many":
+end_dropdown
+row
+
+
+await choice:
++ "Start Mission":
+    simulation create
+    simulation resume
+    -> start
+end_await
+
+
+===== start ======
+
+#
+# Based on the game type call the right 
+# label to build the world
+#
+
+#------------------------------------------------------------------------------------------------------------
+do sbs.set_beam_damages(0, 7.0, enemy_count)
+
+
+match world_select.lower():
+    case "siege": 
+        schedule siege_build_world
+    case "single front": 
+        schedule siege_build_world
+    case "double front": 
+        schedule siege_build_world
+    case "deep strike": 
+        schedule siege_build_world
+    case "peacetime": 
+        schedule siege_build_world
+    case "broder war": 
+        schedule siege_build_world
+end_match
+
+#
+# Consoles are waiting to be started 
+#
+game_started = True
+reroute clients game_started_console
+var watch_end_game_task schedule task_end_game
+
+
+====  pause_screen ====
+
+section style="area: 5, 10, 50, 90;"
+"""""Simulation paused"""""
+
+
+
+await choice:
++ "Resume Mission":
+    simulation resume
+end_await
+jump pause_screen
+##############
+
+
+============ task_end_game ======= 
+
+delay sim 4s
+
+stations = role('tsn') & role('station')
+if len(stations)==0:
+    start_text = "Mission is lost!  All yer base are belong to us, dammit."
+    game_started = False
+
+    do sbs.play_music_file(0, "music/default/failure")
+
+    reroute clients show_game_results
+    reroute server  show_game_results
+end_if
+
+raiders = role('Raider')
+if len(raiders)==0:
+    start_text = "Mission is won!  All the enemies have been destroyed."
+    game_started = False
+    do sbs.play_music_file(0, "music/default/victory")
+    reroute clients show_game_results
+    reroute server  show_game_results
+end_if
+
+
+-> task_end_game
+
+
+

@@ -1,15 +1,15 @@
 grammar Mast;
-import MastLex, MastCore, MastSbs, MastStory;
+import MastStory,MastSbs, MastCore;
 
 
 
 
 
-stmt    : mast_core_stmt 
+stmt    : story_stmt
         | sbs_stmt
-        | story_stmt
+        | mast_core_stmt 
         ;
 
-file_input: (NEWLINE | stmt)* EOF;
+file_input: ( stmt)* EOF;
 
 

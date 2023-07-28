@@ -4,33 +4,6 @@ import MastLex;
 ////////////////////
 // This is needed to allow some keywords
 // to be legal variable names
-name    : NAME
-        // SBS keywords allowed to be variables?
-        | FACE
-        | COLOR
-        | TITLE
-        | FOG
-        | SCAN
-        | RESULT
-        | TAB
-        | CREATE
-        | PAUSE
-        | RESUME
-        | DESTORY
-        | SPAWN
-        | OBJECT
-        | DAMAGE 
-        | INTERNAL
-        | DAMAGE
-        | COMMS
-        | SCIENCE
-        | WEAPONS
-        | SELECT
-        | GRID
-        | GRID
-        | CHANGE
-        | CONSOLE
-        ;
 
 // label_stmt
 label_stmt           : LABEL_MARKER 'replace:'? name LABEL_MARKER; 
@@ -104,7 +77,7 @@ comp_if: 'if' test_nocond (comp_iter)?;
 
 
 
-inline_if       : test;
+inline_if       : 'if' test;
 
 
 // end
@@ -180,10 +153,11 @@ delay_stmt      :  'delay' name  SECONDS_TIME_NUMBER
 //
 // Assign
 //
-shared_assign_stmt: 'shared' name trailer* augassign expr ;
-assign_stmt:  name trailer* augassign expr ;
-function_stmt:  name trailer*;
-do_stmt:  'do' name trailer*;
+shared_assign_stmt: 'shared' name trailer* augassign test_nocond ;
+assign_stmt:  name trailer* augassign test_nocond ;
+//function_stmt:  name '(' (arglist)? ')' ;
+function_stmt:  name trailer* ;
+do_stmt:  'do' (function_stmt|assign_stmt);
 
 augassign       : ('=' 
                 |'+=' 
@@ -205,13 +179,13 @@ augassign       : ('='
 
 
 // logger
-logger_stmt     : 'Logger' 'name' name 
-                | 'Logger' 'name' name 'string' name
-                | 'Logger' 'name' name 'file' STRING
+logger_stmt     : 'Logger' NAME_KW name 
+                | 'Logger' NAME_KW name 'string' name
+                | 'Logger' NAME_KW name 'file' STRING
                 ;
 
 end_await_stmt  : 'end_await' ;
-cancel_stmt     : 'cancel' name ;
+cancel_stmt     : CANCEL name ;
 
 // Not top level stmt
 await_fail_stmt : 'fail' ':' ;
@@ -224,13 +198,13 @@ await_task_complete_stmt    : 'await'  name ;
 
 dictionary_data : '{' (dictorsetmaker)? '}' ;
 
-schedule_task_stmt  : ('schedule'| '=>') name dictionary_data? ; 
+schedule_task_stmt  : (VAR name)? ('schedule'| '=>') name dictionary_data? ; 
 schedule_all_stmt  : ('schedule'| '=>') 'all' ('&' name)* dictionary_data?  ; 
-await_schedule_task : 'await' ('var' name)? schedule_task_stmt 
+await_schedule_task : 'await'  schedule_task_stmt 
                     ;
-await_all_stmt      : 'await' ('var' name)? 'all' name ('&' name)* dictionary_data? 
+await_all_stmt      : 'await' (VAR name)? 'all' name ('&' name)* dictionary_data? 
                     ;
-await_any_stmt      : 'await' ('var' name)? 'any' name ('|' name)* dictionary_data? 
+await_any_stmt      : 'await' (VAR name)? 'any' name ('|' name)* dictionary_data? 
                     ;
 
 ////////////////////////////////////
@@ -250,6 +224,11 @@ bt_seq_stmt     :  'bt' ('invert')?  'seq' 'until' ('success'|'fail') name ('&' 
 
 
 mast_core_stmt  : label_stmt 
+                // have Later in list?
+                | shared_assign_stmt
+                | assign_stmt
+                | function_stmt
+                | do_stmt
                 | delay_stmt
                 | end_stmt 
                 | return_stmt 
@@ -283,6 +262,7 @@ mast_core_stmt  : label_stmt
                 | await_schedule_task
                 | await_all_stmt
                 | await_any_stmt
+                | cancel_stmt
                 //
                 | end_await_stmt
                 | await_fail_stmt
@@ -290,9 +270,39 @@ mast_core_stmt  : label_stmt
 
                 | bt_sel_stmt
                 | bt_seq_stmt
-                // have Later in list?
-                | shared_assign_stmt
-                | assign_stmt
-                | function_stmt
+                
                 ;
 
+name    : NAME
+        // SBS keywords allowed to be variables?
+        | FACE
+        | COLOR
+        | TITLE
+        | FOG
+        | SCAN
+        | RESULT
+        | TAB
+        | CREATE
+        | PAUSE
+        | RESUME
+        | DESTROY
+        | SPAWN
+        | OBJECT
+        | DAMAGE 
+        | INTERNAL
+        | DAMAGE
+        | COMMS
+        | SCIENCE
+        | WEAPONS
+        | SELECT
+        | GRID
+        | GRID
+        | CHANGE
+        | CONSOLE
+        | CLEAR
+        | SET
+        | SHIP
+        | NAME_KW
+        | CHOICE
+        | DATA
+        ;

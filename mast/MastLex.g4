@@ -1,5 +1,88 @@
 lexer grammar MastLex;
-import MastKeywords;
+//import MastKeywords;
+
+
+FACE    : 'face' ;
+COLOR   : 'color' ;
+TITLE   : 'title' ;
+FOG     : 'fog';
+SCAN    : 'scan';
+RESULT  : 'result';
+TAB     : 'tab';
+CREATE  : 'create';
+PAUSE   : 'pause';
+RESUME  : 'resume';
+TIMEOUT : 'timeout' ;
+FAIL    : 'fail' ;
+SUCCESS : 'success' ;
+YIELD   : 'yield' ;
+CANCEL  : 'cancel' ;
+SCHEDULE : 'schedule' ;
+VAR      : 'var' ;
+
+// sbs allowed keywords
+DESTROY : 'destroy';
+DAMAGE : 'damage';
+INTERNAL : 'internal';
+SPAWN : 'spawn';
+OBJECT : 'object';
+COMMS : 'comms';
+SCIENCE : 'science';
+WEAPONS : 'weapons';
+SELECT : 'select';
+GRID : 'grid';
+CONSOLE : 'console';
+CHANGE : 'change';
+TRANSMIT : 'transmit' ;
+RECEIVE : 'receive' ;
+FOLLOW  : 'follow' ;
+ROUTE   : 'route' ;
+SIMULATION : 'simulation' ;
+COMMS_INFO : 'comms_info' ;
+
+// Story
+STYLE           : 'style' ;
+DATA            : 'data' ;
+CLICKABLE       : 'clickable' ;
+END_CLICKABLE   : 'end_clickable' ;
+ROW             : 'row' ;
+HOLE            : 'hole' ;
+BLANK           : 'blank' ;
+REFRESH         : 'refresh' ;
+SECTION         : 'section' ;
+SHIP            : 'ship' ;
+GUI             : 'gui' ;
+SET             : 'set' ;
+CHOICE          : 'choice' ;
+BUTTON          : 'button';
+END_BUTTON      : 'end_button' ;
+SLIDER          : 'slider' ;
+INTSLIDER       : 'intslider' ;
+SCROLLBAR       : 'scrollbar' ;
+CHECKBOX        : 'checkbox' ;
+RADIO           : 'radio'   ;
+VRADIO          : 'vradio' ;
+REROUTE         : 'reroute' ;
+SERVER          : 'server' ;
+CLIENTS         : 'clients' ;
+CLIENT          : 'client' ;
+INPUT           : 'input' ;
+IMAGE           : 'image' ;
+DROPDOWN        : 'dropdown' ;
+END_DROPDOWN    : 'end_dropdown' ;
+WIDGET_LIST     : 'widget_list' ;
+WIDGET          : 'widget' ;
+LAYOUT          : 'layout' ;
+CLEAR           : 'clear' ;
+ACTIVATE        : 'activate' ;
+ON              : 'on' ;
+END_ON          : 'end_on' ;
+CONTROL         : 'control' ;
+DISCONNECT      : 'disconnect' ;
+NAME_KW         : 'name' ;
+
+
+
 
 fragment COMMENT
  : '#' ~[\r\n\f]*
@@ -14,13 +97,25 @@ STRING
  : STRING_LITERAL
  //| BYTES_LITERAL
  ;
-STRING_LITERAL :  ( SHORT_STRING | LONG_STRING ) ;
-LONG_STRING_LITERAL :  ( GUI_TEXT_STRING | LONG_STRING ) ;
+STRING_LITERAL : ( [rR] | [uU] | [fF] | ( [fF] [rR] ) | ( [rR] [fF] ) )? ( SHORT_STRING | LONG_STRING ) ;
+LONG_STRING_LITERAL :  ( GUI_TEXT_STRING ) ;
+
+/// stringescapeseq ::=  "\" <any source character>
+fragment STRING_ESCAPE_SEQ
+ : '\\' .
+ | '\\' NEWLINE
+ ;
 
 fragment SHORT_STRING
-        : '\'' (~[\\\r\n\f'] )* '\''
-        | '"' ( ~[\\\r\n\f"] )* '"'
-        ;
+ : '\'' ~[\\\r\n\f']* '\''
+ | '"'  ~[\\\r\n\f"]* '"'
+ ;
+
+
+// fragment SHORT_STRING
+//         : '\'' (~[\\\r\n\f'] )* '\''
+//         | '"' ( ~[\\\r\n\f"] )* '"'
+//         ;
 
 // Long String can have new lines
 fragment LONG_STRING
@@ -50,7 +145,7 @@ fragment INLINE_CODE_MARKER
         ;
 
 // Things to ignore
-SKIP_              : (SPACES | COMMENT | INLINE_CODE_MARKER) -> skip;                 
+SKIP_              : (SPACES | COMMENT | INLINE_CODE_MARKER | NEWLINE) -> skip;                 
 //
 ///
 ///
