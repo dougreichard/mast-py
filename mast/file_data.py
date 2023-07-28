@@ -4,6 +4,7 @@
 
 file_one = """
 x = 2
+shared z = 2
 
 jump start
 
@@ -15,6 +16,19 @@ next x
 for x while x>y:
     y = x
 next x
+
+match friendly_select:
+    case "many":
+        max_hull_points=20
+    case "lots":
+        max_hull_points=15
+    case "some":
+        max_hull_points=10
+    case "few":
+        max_hull_points=5
+    case "none":
+        ->RETURN
+end_match
 """
 
 file_two = """
@@ -104,6 +118,6 @@ if "docked" == dock_state_string:
         end_if
     next system
 end_if
-delay GUI 5 s
+delay sim 5s
 -> player_docking
 """

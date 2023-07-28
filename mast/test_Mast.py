@@ -74,7 +74,11 @@ class TestMastParser(unittest.TestCase):
         self.expect_valid("from example/test.mastlib import example/story.mast", "stmt")
 
     def test_valid_delay(self):
-        self.expect_valid("delay SIM 5s", "delay_stmt")
+        self.expect_valid("delay sim 5s", "delay_stmt")
+        self.expect_valid("delay sim 5m", "delay_stmt")
+        self.expect_valid("delay sim 3s 5m", "delay_stmt")
+        self.expect_valid("delay sim 5m 2s", "delay_stmt")
+        self.expect_valid("damage = 5", "assign_stmt")
 
 
     def test_valid_file(self):
