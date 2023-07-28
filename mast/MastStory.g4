@@ -54,9 +54,9 @@ await_choice_stmt   : 'await' CHOICE ':'
 // Only legal in a complex await?
 disconnect_stmt   : 'disconnect' ':' ;
 
-button_opts : data_opts comp_if? style_opts?
-            | comp_if style_opts? data_opts?
-            | style_opts data_opts? comp_if?
+button_opts : data_opts inline_if? style_opts?
+            | inline_if style_opts? data_opts?
+            | style_opts data_opts? inline_if?
             ;
 
 gui_button_control_stmt : BUTTON gui_props button_opts? ':' ;

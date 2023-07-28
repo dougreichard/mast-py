@@ -77,10 +77,10 @@ await_scan_stmt  : 'await' SCAN STRING (FOG NUMBER)? ':'
 scan_result_stmt   :  SCAN RESULT STRING
                     ;
 
-scan_tab_stmt       :  SCAN TAB STRING comp_for? comp_if? ':'
+scan_tab_stmt       :  SCAN TAB STRING comp_for? inline_if? ':'
                     ;
 
-button_stmt         :  ('+'|'*') STRING color_opts? comp_for? comp_if? ':'
+button_stmt         :  ('+'|'*') STRING color_opts? comp_for? inline_if? ':'
                     ;
 
 simulation_stmt     : 'simulation' (CREATE|PAUSE|RESUME) ;

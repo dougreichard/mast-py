@@ -104,7 +104,7 @@ comp_if: 'if' test_nocond (comp_iter)?;
 
 
 
-
+inline_if       : test;
 
 
 // end
@@ -114,11 +114,13 @@ return_stmt             : '->' 'RETURN'  inline_if?;
 // yield
 yield_stmt             : '->' 'YIELD'  inline_if?;
 // fail
-fail_stmt             : '->' 'FAIL'  inline_if?;
+fail_stmt               : '->' 'FAIL'  inline_if?
+                        | YIELD FAIL inline_if?;
 
-success_stmt             : '->' 'SUCCESS'  inline_if?;
+success_stmt            : '->' 'SUCCESS' inline_if?
+                        | YIELD SUCCESS inline_if?;
 
-inline_if       : 'if' test;
+
 
 // jump, push , pop,
 jump_stmt       : 'jump' name inline_if? 
@@ -236,17 +238,15 @@ await_any_stmt      : 'await' ('var' name)? 'any' name ('|' name)* dictionary_da
 //// not released so can change
 ////
 // yield bt sel a|b   [data]
+
 // await bt until fail seq a&b [data] 
 // await bt until success seq a&b [data]
-// await bt invert seq a&b [data]
-// await bt invert seq a&b [data]                    
-// yield success
-// yield fail 
-// yield success if cond
-// yield fail if cond
+bt_sel_stmt     :  'bt' ('invert')?  'sel' name ('|' name)* dictionary_data? ;
+bt_seq_stmt     :  'bt' ('invert')?  'seq' 'until' ('success'|'fail') name ('&' name)* dictionary_data? ;
+// bt_yield_stmt   :  'yield' ('success'|'fail') inline_if? ;
 
 
-// behavior
+
 
 
 mast_core_stmt  : label_stmt 
@@ -288,6 +288,8 @@ mast_core_stmt  : label_stmt
                 | await_fail_stmt
                 | await_condition_stmt
 
+                | bt_sel_stmt
+                | bt_seq_stmt
                 // have Later in list?
                 | shared_assign_stmt
                 | assign_stmt

@@ -11,6 +11,9 @@ CREATE  : 'create';
 PAUSE   : 'pause';
 RESUME  : 'resume';
 TIMEOUT : 'timeout' ;
+FAIL    : 'fail' ;
+SUCCESS : 'success' ;
+YIELD   : 'yield' ;
 
 // sbs allowed keywords
 DESTORY : 'destory';
