@@ -1,3 +1,4 @@
-/mast/parser
+/mast/pyparser
+/mast/cpp-parser
 **/__pycache__/**
 **/.antlr/**

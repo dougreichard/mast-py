@@ -5,10 +5,11 @@ import io
 
 class MastErrorListener(ErrorListener):
 
-    def __init__(self, output):
+    def __init__(self, output, file_name):
         self.output = output        
         self.msg = ''
         self.count = 0
+        self.file_name = file_name
     
     def syntaxError(self, recognizer, offendingSymbol, line, column, msg, e):        
         self.output.write(msg)

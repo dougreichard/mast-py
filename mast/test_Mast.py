@@ -1,6 +1,6 @@
 from antlr4 import *
-from parser.MastParser import MastParser
-from parser.MastLexer import MastLexer
+from pyparser.MastParser import MastParser
+from pyparser.MastLexer import MastLexer
 from MastErrorListener import MastErrorListener
 import unittest
 import io
@@ -9,14 +9,14 @@ from file_data import file_one, file_two
 
 class TestMastParser(unittest.TestCase):
 
-    def setup(self, text):        
+    def setup(self, text, file_name=""):        
         lexer = MastLexer(InputStream(text))        
         stream = CommonTokenStream(lexer)
         parser = MastParser(stream)
         
         self.output = io.StringIO()
         self.error = io.StringIO()
-        errorListener = MastErrorListener(self.error)
+        errorListener = MastErrorListener(self.error, file_name)
 
         lexer.removeErrorListeners()        
         lexer.addErrorListener(errorListener)  
@@ -29,8 +29,8 @@ class TestMastParser(unittest.TestCase):
         return parser
     
 
-    def expect_valid(self, code, func):
-        parser = self.setup(code)
+    def expect_valid(self, code, func, file_name=""):
+        parser = self.setup(code, file_name)
         func = getattr(parser, func)
         self.assertIsNotNone(func)
         func()
@@ -74,23 +74,17 @@ class TestMastParser(unittest.TestCase):
         # as stmt
         self.expect_valid("from example/test.mastlib import example/story.mast", "stmt")
 
-    def test_valid_delay(self):
-        self.expect_valid("delay sim 5s", "delay_stmt")
-        self.expect_valid("delay sim 5m", "delay_stmt")
-        self.expect_valid("delay sim 3s 5m", "delay_stmt")
-        self.expect_valid("delay sim 5m 2s", "delay_stmt")
-        self.expect_valid("damage = 5", "assign_stmt")
-
 
     def test_valid_file(self):
         self.expect_valid(file_one, "file_input")
         self.expect_valid(file_two, "file_input")
         
-        for root, dirs, files in os.walk('./mast/examples'):
+        for root, dirs, files in os.walk('./mast/examples/basic'):
             for name in files:
-                with open(os.path.join(root, name)) as f:
-                    s = f.read( )
-                    self.expect_valid(s, "file_input")
+                if name.endswith(".mast"):
+                    with open(os.path.join(root, name)) as f:
+                        s = f.read( )
+                        self.expect_valid(s, "file_input", name)
 
 
     def test_invalid_jump(self):

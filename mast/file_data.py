@@ -118,6 +118,6 @@ if "docked" == dock_state_string:
         end_if
     next system
 end_if
-delay sim 5s
+await delay_sim(5)
 -> player_docking
 """

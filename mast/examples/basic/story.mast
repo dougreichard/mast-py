@@ -1,7 +1,7 @@
 ## 
 # Example shows reusable common client select
+import debug.mast #want debug tabs left of upgrade
 import common_console_select.mast
-import common_docking.mast
 import science.mast
 import comms.mast
 import internal_damage.mast
@@ -11,14 +11,11 @@ import siege.mast
 import extra_gui.mast
 import game_results.mast
 import damage.mast
+import grid_comms.mast
+import pickup_common.mast
+import upgrade.mast
+import story.py
 
-#
-# This directs the script 
-# to the client and server GUI
-# when the client is started
-#
-reroute server start_server 
-reroute clients client_main
 
 
 #
@@ -26,20 +23,25 @@ reroute clients client_main
 #
 #logger
 
-
-shared start_text =~~"""
+shared start_text = ~~"""
 Legendary Missions:
 
-Missions rich in the history of Artemis re-imagined for for the Cosmos.
+Missions rich in the history of Artemis re-imagined for Cosmos.
 
 
 Written using MAST and is a great reference for those looking to write their own missions.
 """~~
 
+
+
+
+
 #
 # Game data
 #
 shared game_started = False
+
+
 shared enemy_count=5
 shared player_count = 1
 shared player_list = ~~[
@@ -55,18 +57,33 @@ shared player_list = ~~[
 
 
 #
+# This directs the script 
+# to the client and server GUI
+# when the client is started
+#
+gui_reroute_server("start_server")
+gui_reroute_clients("client_main")
+
+
+
+#
 # The Server GUI
 #   This label runs once, to initialize server data
 #
 ========== start_server ===============
 
 shared world_select = "siege"
-shared terrain_select = "few"
+shared terrain_select = "some"
+shared lethal_select = "none"
 shared friendly_select = "few"
-shared anomaly_select = "none"
+shared monster_select = "none"
+shared upgrade_select = "many"
+shared seed_value = 0
 
 watch_end_game_task = None
+shared skybox = skybox_get_random()
 
+sbs.set_sky_box_all(skybox)
 
 #
 # The Server GUI
@@ -74,53 +91,61 @@ watch_end_game_task = None
 ====== show_server_menu =====
 
 if watch_end_game_task is not None:
-    cancel watch_end_game_task
+    task_cancel(watch_end_game_task)
     watch_end_game_task = None
 end_if
 
-section style="area: 5, 10, 50, 90;"
+gui_section( style="area: 5, 10, 50, 90;")
 """""{start_text}"""""
 
-section style="area: 50, 10, 95,90;row-height:75px;padding:0px,10px"
-""" justify:right;text:Difficulty """
+# For using a seed value when randomly generating terrain, not currently implemented
+#row style="row-height:65px;"
+#"""justify:right;text:Seed (Optional)"""
+#gui_input("""desc: Integer""", var="seed_value")
 
 
-intslider enemy_count "low: 1.0;high:11.0"
-row
-blank
-row
-
+gui_section(  style="area: 50, 10, 95,90;row-height:65px;padding:0px,10px")
 """ justify:right;text:Player ships """
-intslider player_count "low: 1.0;high:8.0"
-row
-blank
-row
+gui_slider("low: 1.0;high:8.0", var="player_count")
+gui_row()
+""" justify:right;text:Difficulty """
+gui_slider("low: 1.0;high:11.0", var="enemy_count")
+gui_row()
 
 """ justify:right;text:Mission Type"""
-dropdown world_select "text: Mission type;list:siege,single front,double front,deep strike,peacetime,border war,infestation":
-end_dropdown
-row
+gui_drop_down("text: Mission type;list:siege,single front,double front,deep strike,peacetime,border war,infestation", var="world_select")
+gui_row()
+gui_blank()
+gui_row()
 
 """justify:right;text:Terrain"""
-dropdown terrain_select "text: Terrain;list:none, few,some, lots, many":
-end_dropdown
-row
+gui_drop_down("text: Terrain;list: none, few, some, lots, many", var="terrain_select")
+gui_row()
+
+"""justify:right;text:Lethal Terrain"""
+gui_drop_down("text: Lethal Terrain;list: none, few, some, lots, many", var="lethal_select")
+gui_row()
 
 """justify:right;text:Friendly Ships"""
-dropdown friendly_select "text: Friendly Ships;list:none, few,some, lots, many":
-end_dropdown
-row
+gui_drop_down("text: Friendly Ships;list: none, few, some, lots, many", var="friendly_select")
+gui_row()
 
-"""justify:right;text:Anomalies"""
-dropdown anomaly_select_select "text: Anomalies;list:none, few,some, lots, many":
-end_dropdown
-row
+"""justify:right;text:Monsters"""
+gui_drop_down("text: Monsters;list: none, few, some, lots, many", var="monster_select")
+gui_row()
 
+"""justify:right;text:Upgrades"""
+gui_drop_down("text: Upgrades;list:none, few,some, lots, many", var="upgrade_select")
+
+#gui_row()
+
+#blank
+#gui_row()
 
 await choice:
 + "Start Mission":
-    simulation create
-    simulation resume
+    sim_create()
+    sim_resume()
     -> start
 end_await
 
@@ -133,42 +158,42 @@ end_await
 #
 
 #------------------------------------------------------------------------------------------------------------
-do sbs.set_beam_damages(0, 7.0, enemy_count)
+sbs.set_beam_damages(0, 7.0, enemy_count)
 
 
 match world_select.lower():
     case "siege": 
-        schedule siege_build_world
+        task_schedule(siege_build_world)
     case "single front": 
-        schedule siege_build_world
+        task_schedule(siege_build_world)
     case "double front": 
-        schedule siege_build_world
+        task_schedule(siege_build_world)
     case "deep strike": 
-        schedule siege_build_world
+        task_schedule(siege_build_world)
     case "peacetime": 
-        schedule siege_build_world
+        task_schedule(siege_build_world)
     case "broder war": 
-        schedule siege_build_world
+        task_schedule(siege_build_world)
 end_match
 
 #
 # Consoles are waiting to be started 
 #
 game_started = True
-reroute clients game_started_console
-var watch_end_game_task schedule task_end_game
+gui_reroute_clients(game_started_console)
+watch_end_game_task = task_schedule(task_end_game)
 
 
 ====  pause_screen ====
 
-section style="area: 5, 10, 50, 90;"
+gui_section( style="area: 5, 10, 50, 90;")
 """""Simulation paused"""""
 
 
 
 await choice:
 + "Resume Mission":
-    simulation resume
+    sim_resume()
 end_await
 jump pause_screen
 ##############
@@ -176,26 +201,26 @@ jump pause_screen
 
 ============ task_end_game ======= 
 
-delay sim 4s
+await delay_sim(4)
 
 stations = role('tsn') & role('station')
 if len(stations)==0:
     start_text = "Mission is lost!  All yer base are belong to us, dammit."
     game_started = False
 
-    do sbs.play_music_file(0, "music/default/failure")
+    sbs.play_music_file(0, "music/default/failure")
 
-    reroute clients show_game_results
-    reroute server  show_game_results
+    gui_reroute_clients(show_game_results)
+    gui_reroute_server(  show_game_results)
 end_if
 
 raiders = role('Raider')
 if len(raiders)==0:
     start_text = "Mission is won!  All the enemies have been destroyed."
     game_started = False
-    do sbs.play_music_file(0, "music/default/victory")
-    reroute clients show_game_results
-    reroute server  show_game_results
+    sbs.play_music_file(0, "music/default/victory")
+    gui_reroute_clients(show_game_results)
+    gui_reroute_server(  show_game_results)
 end_if
 
 

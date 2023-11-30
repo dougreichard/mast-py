@@ -1,0 +1,194 @@
+route_change_console("select_console")
+#
+# Expects shared data 
+#    player_list that has the list of player ships
+#    player_count the number of expected player ships
+#    game_started game state
+#
+
+========= client_main ==========
+console_select = "helm"
+client_select_ship = "artemis"
+console_ready = False
+ship_name = "artemis"
+ship_type = player_list[0].ship 
+ship_type_def = player_list[0].ship
+shared ship_list = ""
+client_selected_index = 0
+shared valid_interiors = set()
+for key in grid_data:
+    if len(grid_data[key]["grid_objects"])>0:
+        valid_interiors.add(key)
+    end_if
+next key
+
+
+========== select_console ==========
+# default console_select = "helm"
+# default client_select_ship = "artemis"
+
+i = 0
+shared ship_list = ""
+for player_ship in player_list:
+    if i>=player_count:
+        break
+    end_if
+    i += 1
+    if len(ship_list) >0:
+        ship_list = ship_list + ","
+    end_if
+    ship_list = ship_list + player_ship.name.lower()
+next player_ship
+
+# Clamp selected index
+client_selected_index = min(player_count, client_selected_index )
+
+ship_type_def = player_list[client_selected_index].ship
+client_select_ship =player_list[client_selected_index].name.lower()
+ship_name = client_select_ship
+
+if console_select == "helm" and not game_started:
+  gui_section(style="area: 1,60px, 40,50;row-height: 50px;")
+  gui_row() # style="row-height: 50px;"
+  gui_input("desc:Ship Name", var="ship_name")
+  gui_row( style="row-height: 300px;")
+  
+  #
+  # Specify only ships with defined engineering grid
+  #
+  gui_content(ship_picker_control("Your Ship", ship_type_def, ship_keys=valid_interiors), var="ship_type")
+  gui_row( style="row-height: 50px;")
+  gui_blank()
+  gui_row(style="row-height: 50px;")
+  on message gui_button("Apply changes"):
+    if client_selected_index != -1 and client_selected_index<player_count:
+        if len(ship_name)>0:
+            player_list[client_selected_index].name = ship_name
+            client_select_ship = ship_name
+        end_if
+
+        player_list[client_selected_index].ship = ship_type.value
+    end_if
+    jump select_console
+  end_on
+end_if
+
+
+
+gui_section( style="area: 50,60px,75,90;")
+gui_vradio(f"{ship_list}", style="row-height: 50px;", var="client_select_ship")
+
+gui_section( style="area: 80,60px, 99,90;")
+gui_vradio("helm,weapons, comms,science,engineering,mainscreen", style="row-height: 50px;", var="console_select")
+gui_row(style="row-height: 50px;")
+
+if not game_started:
+    gui_checkbox("ready", var="console_ready")
+else:
+    on message gui_button("ready"):
+        console_ready = True
+        jump console_selected
+    end_on
+end_if
+
+on change player_count:
+    client_selected_index = min(client_selected_index, player_count-1)
+    jump select_console
+end_on
+
+#
+# See when other console changes the ships list?
+#
+on change player_list[client_selected_index].ship+player_list[client_selected_index].name:
+    jump select_console
+end_on
+
+
+on change client_select_ship:
+    #print(f"I'm triggered css {client_select_ship}")
+    for i in range(player_count):
+        client_selected_index = i
+        break if player_list[i].name.strip().lower() == client_select_ship
+    next i
+    jump select_console
+end_on
+
+on change console_select:
+    jump select_console
+end_on
+
+await gui
+
+
+# Multiple labels to call to get here
+
+====== game_started_console ====
+if not console_ready:
+    jump select_console
+end_if
+
+====== console_selected ====
+if console_select is None or client_select_ship is None:
+    jump select_console
+end_if
+
+_ship_id= None
+for player_ship in to_object_list(role("__PLAYER__")):
+    if player_ship.name.lower() == client_select_ship:
+        _ship_id = player_ship.id
+        sbs.assign_client_to_ship(client_id, player_ship.id)
+        set_inventory_value(client_id, "assigned_ship", player_ship.id)
+    end_if
+next player_ship
+
+jump select_console if _ship_id is None
+#
+# This should get a skybox with client overriding, shp, overriding shared
+#
+sky_box = get_inventory_value(SHARED, "skybox", "sky1")
+sky_box = get_inventory_value(_ship_id, "skybox", sky_box)
+sky_box = get_inventory_value(client_id, "skybox", sky_box)
+sbs.set_sky_box(client_id, sky_box)
+
+
+
+====== show_console_selected ====
+#
+# Make it so the console can be found if needed
+#
+set_inventory_value(client_id, "CONSOLE_TYPE", console_select)
+#------------------------------------------------------------------------------------------------------------
+sbs.set_beam_damages(client_id, 7.0, enemy_count)
+#------------------------------------------------------------------------------------------------------------
+gui_add_console_tab(_ship_id, console_select, console_select, None)
+gui_console(console_select)
+
+
+#
+#
+# Use a label replace to override: 
+#   ==== replace: console_bottom_choices ====
+#        You code
+#
+==== console_bottom_choices ====
+await gui
+
+
+
+
+=========== debug_mast =========
+
+task_count = 0
+for sch in mast.schedulers:
+    for tsk in sch.tasks:
+        task_count += 1
+    next tsk
+next sch
+
+gui_section( style="area: 0,50px, 100,100;")
+"""""
+Task count {task_count}
+""""""
+await gui timeout 4s
+
+jump debug_mast
