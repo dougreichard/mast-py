@@ -4,6 +4,7 @@
     "author": "Your Name <email@example.com>",
     "scripts": {
         "update": "cd mast&&antlr4 -Dlanguage=Python3 Mast.g4 -o ./pyparser",
+        "update-tg": "cd mast&&antlr4 -Dlanguage=Python3 TestGrammar.g4 -o ./testgrammar",
         "gen-cpp": "cd mast&&antlr4 -Dlanguage=Cpp Mast.g4 -o ./cpp-parser",
         "gui": "cd mast&&antlr4-parse Mast.g4 file_input -gui < examples\\basic\\story.mast"
     }

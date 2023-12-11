@@ -2,113 +2,51 @@ lexer grammar MastLex;
 //import MastKeywords;
 
 //https://github.com/wevre/wry/blob/master/grammars/DentLexer.g4
+
+
+//https://github.com/yshavit/antlr-denter/tree/main
+tokens { INDENT, DEDENT }
+
+@lexer::header{
+from .denterhelper import DenterHelper
+from .MastParser import MastParser
+}
 @lexer::members {
+class MastDenter(DenterHelper):
+    def __init__(self, lexer, nl_token, indent_token, dedent_token, ignore_eof):
+        super().__init__(nl_token, indent_token, dedent_token, ignore_eof)
+        self.lexer: MastLexer = lexer
 
-INDENT_TOKEN = INDENT
-DEDENT_TOKEN = DEDENT
+    def pull_token(self):
+        return super(MastLexer, self.lexer).nextToken()
 
-# Initializing `pendingDent` to true means any whitespace at the beginning
-# of the file will trigger an INDENT, which will probably be a syntax error,
-# as it is in Python.
-pendingDent = True
-
-indentCount = 0
-
-#private java.util.LinkedList<Token> tokenQueue = new java.util.LinkedList<>();
-tokenQueue = []
-
-#private java.util.Stack<Integer> indentStack = new java.util.Stack<>();
-indentStack = []
-
-initialIndentToken = None
-
-#private int getSavedIndent() { return indentStack.isEmpty() ? 0 : indentStack.peek(); }
-def getSaveIndent():
-        return 0 if len(MastLexer.indentStack)==0 else MastLexer.indentStack[-1]
-
-#private CommonToken createToken(int type, String text, Token next) {
-#        CommonToken token = new CommonToken(type, text);
-#        if (null != initialIndentToken) {
-#                token.setStartIndex(initialIndentToken.getStartIndex());
-#                token.setLine(initialIndentToken.getLine());
-#                token.setCharPositionInLine(initialIndentToken.getCharPositionInLine());
-#                token.setStopIndex(next.getStartIndex()-1);
-#        }
-#        return token;
-#}
-def createToken(type, text, next):
-        pass
+denter = None
 
 def nextToken(self):
-        return super().nextToken()
+    if not self.denter:
+        self.denter = self.MastDenter(self, self.NEWLINE, MastParser.INDENT, MastParser.DEDENT, False)
+    return self.denter.next_token()
 
-
-#@Override
-#public Token nextToken() {
-#
-#        // Return tokens from the queue if it is not empty.
-#        if (!tokenQueue.isEmpty()) { return tokenQueue.poll(); }
-#
-#        // Grab the next token and if nothing special is needed, simply return it.
-#        // Initialize `initialIndentToken` if needed.
-#        Token next = super.nextToken();
-#        //NOTE: This could be an appropriate spot to count whitespace or deal with
-#        //NEWLINES, but it is already handled with custom actions down in the
-#        //lexer rules.
-#        if (pendingDent && null == initialIndentToken && NEWLINE != next.getType()) { initialIndentToken = next; }
-#        if (null == next || HIDDEN == next.getChannel() || NEWLINE == next.getType()) { return next; }
-#       // Handle EOF. In particular, handle an abrupt EOF that comes without an
-#        // immediately preceding NEWLINE.
-#        if (next.getType() == EOF) {
-#                indentCount = 0;
-#                // EOF outside of `pendingDent` state means input did not have a final
-#                // NEWLINE before end of file.
-#                if (!pendingDent) {
-#                        initialIndentToken = next;
-#                        tokenQueue.offer(createToken(NEWLINE, "NEWLINE", next));
-#                }
-#        }
-#
-###        // Before exiting `pendingDent` state queue up proper INDENTS and DEDENTS.
-#        while (indentCount != getSavedIndent()) {
-#                if (indentCount > getSavedIndent()) {
-#                        indentStack.push(indentCount);
-#                        tokenQueue.offer(createToken(INDENT, "INDENT" + indentCount, next));
-#                } else {
-#                        indentStack.pop();
-#                        tokenQueue.offer(createToken(DEDENT, "DEDENT"+getSavedIndent(), next));
-#                }
-#        }
-#        pendingDent = false;
-#        tokenQueue.offer(next);
-#        return tokenQueue.poll();
-#}
-#
 }
 
 
-
+NEWLINE: ('\r'? '\n' ' '*); //For tabs just switch out ' '* with '\t'*
+WS : [ \t]+ -> skip ;
 
 SCAN    : 'scan';
-RESULTS  : 'results';
-TAB     : 'tab';
 TIMEOUT : 'timeout' ;
 FAIL    : 'fail' ;
 SUCCESS : 'success' ;
 YIELD   : 'yield' ;
 COMMS : 'comms';
-SCIENCE : 'science';
 CHANGE : 'change';
 FOCUS  : 'focus' ;
 
-DATA            : 'data' ;
-//SHIP            : 'ship' ;
 GUI             : 'gui' ;
-//SET             : 'set' ;
 CHOICE          : 'choice' ;
 STYLE           : 'style' ;
 COLOR           : 'color' ;
-//CLEAR           : 'clear' ;
+
 ON              : 'on' ;
 END_ON          : 'end_on' ;
 DISCONNECT      : 'disconnect' ;
@@ -180,7 +118,7 @@ fragment INLINE_CODE_MARKER
         ;
 
 // Things to ignore
-SKIP_              : (COMMENT | INLINE_CODE_MARKER | NEWLINE) -> skip;                 
+SKIP_              : (COMMENT | INLINE_CODE_MARKER ) -> skip;                 
 //
 ///
 ///
@@ -343,20 +281,3 @@ MINUTES_TIME_NUMBER
 
 
 
-NEWLINE : ( '\r'? '\n' | '\r' ) {
-if self.pendingDent: 
-        self.skip()
-self.pendingDent = True
-self.indentCount = 0
-self.initialIndentToken = None
-};
-
-
-WS : [ \t]+ {
-self.skip()
-if self.pendingDent: 
-        self.indentCount += len(self.text)
-} ;
-
-INDENT : 'INDENT' {self.skip() };
-DEDENT : 'DEDENT' {self.skip() };

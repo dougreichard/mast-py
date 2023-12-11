@@ -108,23 +108,28 @@ dotted_name: name ('.' name)*;
 //
 // if (else, elif, end_if)
 //
-if_stmt: 'if' test ':'; 
-elif_stmt: 'elif' test ':' ;
-else_stmt: 'else' ':';
-end_if_stmt: 'end_if';
+
+block : ':' INDENT stmt+ DEDENT ;
+
+elif_stmt: 'elif' test block elif_stmt?
+        | 'else' block ;
+if_stmt: 'if' test block elif_stmt?; 
+
+//else_stmt: 'else' ':';
+//end_if_stmt: 'end_if';
 
 
 //
 // match (case, end_match)
 //
-match_stmt: 'match' atom_expr ':'; 
-case_stmt: 'case' atom_expr ':' ;
+match_stmt: 'match' atom_expr ':' INDENT case_stmt+ DEDENT; 
+case_stmt: 'case' atom_expr block ;
 //else_stmt: 'else' ':';
-end_match_stmt: 'end_match';
+//end_match_stmt: 'end_match';
 
 // loop - start, break, end, 
-for_stmt: 'for' name 'in' test ':';
-while_stmt: 'for' name 'while' test ':';
+for_stmt: 'for' name 'in' test block;
+while_stmt: 'for' name 'while' test block;
 next_stmt: NEXT name;
 break_stmt: 'break' inline_if?;
 continue_stmt: 'continue' inline_if?;
@@ -143,7 +148,7 @@ log_stmt        : 'log' expr
 shared_assign_stmt: 'shared' name trailer* augassign test_nocond ;
 assign_stmt:  name trailer* augassign test_nocond ;
 //function_stmt:  name '(' (arglist)? ')' ;
-function_stmt:  name trailer* ;
+function_stmt:  name trailer+  ;
 
 augassign       : ('=' 
                 |'+=' 
@@ -185,34 +190,38 @@ dictionary_data : '{' (dictorsetmaker)? '}' ;
 
 
 
-mast_core_stmt  : label_stmt 
+mast_core_stmt  : label_stmt NEWLINE
                 // have Later in list?
-                | shared_assign_stmt
-                | assign_stmt
-                | function_stmt
-                | end_stmt 
-                | return_stmt 
-                | yield_stmt 
-                | fail_stmt
-                | success_stmt
-                | jump_stmt 
-                | import_stmt 
+                | shared_assign_stmt NEWLINE
+                | assign_stmt NEWLINE
+                | function_stmt NEWLINE
+                | end_stmt NEWLINE
+                | return_stmt NEWLINE
+                | yield_stmt NEWLINE
+                | fail_stmt NEWLINE
+                | success_stmt NEWLINE
+                | jump_stmt NEWLINE
+                | import_stmt NEWLINE
+
                 | if_stmt 
                 | elif_stmt 
-                | else_stmt 
-                | end_if_stmt 
+                //| else_stmt 
+                //| end_if_stmt 
+
                 | for_stmt 
+                //| next_stmt
                 | while_stmt 
-                | next_stmt
-                | break_stmt
-                | continue_stmt
+                
+                | break_stmt NEWLINE
+                | continue_stmt NEWLINE
+
                 | match_stmt
                 | case_stmt
-                | end_match_stmt
+                //| end_match_stmt
                 | timeout_stmt
                 
-                | log_stmt
-                | logger_stmt
+                | log_stmt NEWLINE
+                | logger_stmt NEWLINE
                 | await_stmt_block
                 | await_stmt_single
                 
@@ -225,19 +234,16 @@ mast_core_stmt  : label_stmt
 
 name    : NAME
         // SBS keywords allowed to be variables?
-        | SCIENCE
         | COMMS
         | SCAN
-        | RESULTS
         | NEXT
-| NAME_KW
-| CHOICE
-| DATA
-| MESSAGE
-//| POINT
-| GUI
-| STYLE
-| COLOR
+        | NAME_KW
+        | CHOICE
+        | MESSAGE
+        //| POINT
+        | GUI
+        | STYLE
+        | COLOR
         ;
 
 ////////////////////////////////////////////////////////
@@ -264,12 +270,6 @@ await_scan_stmt  : 'await' SCAN ':'
                     | 'await' name SCAN name ':'
                     ;
 
-scan_results_stmt   :  SCAN RESULTS STRING
-                    ;
-
-scan_tab_stmt       :  SCAN TAB STRING comp_for? inline_if? ':'
-                    ;
-
 change_stmt   : CHANGE test ':' ;
 
 button_stmt         :  ('+'|'*') STRING color_opts? comp_for? inline_if? ':'
@@ -278,8 +278,6 @@ button_stmt         :  ('+'|'*') STRING color_opts? comp_for? inline_if? ':'
 
 sbs_stmt        : await_comms_stmt
                 | await_scan_stmt
-                | scan_results_stmt
-                | scan_tab_stmt
                 | button_stmt
                 | change_stmt
                 ;
@@ -298,14 +296,19 @@ disconnect_stmt   : DISCONNECT ':' ;
 focus_statement   : FOCUS ':' ;
 
 
-//on_change_stmt  : ON CHANGE expr ':' INDENT + stmt + DEDENT ;
-on_change_stmt  : ON CHANGE expr ':' ;
+on_change_stmt  : ON CHANGE expr ':' INDENT + stmt + DEDENT ;
+//on_change_stmt  : ON CHANGE expr ':' ;
 on_message_stmt  : ON MESSAGE expr ':' ;
 end_on_stmt :  END_ON ;
 
 style_opts : STYLE '=' STRING_LITERAL ;
 gui_text_stmt : LONG_STRING_LITERAL | STRING style_opts?;
 gui_append_text_stmt : GUI_APPEND_TEXT_STRING style_opts?;
+
+
+// BLOCK STATEMENT DON'T need newlines
+// But top level do
+// e.g. assign needs a newline, if doesn't
 
 story_stmt  :   gui_text_stmt
             |   gui_append_text_stmt
@@ -323,11 +326,11 @@ story_stmt  :   gui_text_stmt
 
 
 
-stmt    : story_stmt
-        | sbs_stmt
+stmt    : story_stmt 
+        | sbs_stmt 
         | mast_core_stmt 
         ;
 
-file_input: ( stmt)* EOF;
+file_input: ( stmt)* ;
 
 

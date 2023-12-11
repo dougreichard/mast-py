@@ -5,17 +5,15 @@
 file_one = """
 x = 2
 shared z = 2
-
 jump start
-
 ==== start ====
 for x in range(3):
     y = x
-next x
+
 
 for x while x>y:
     y = x
-next x
+
 
 match friendly_select:
     case "many":
@@ -28,7 +26,6 @@ match friendly_select:
         max_hull_points=5
     case "none":
         ->RETURN
-end_match
 """
 
 file_two = """
@@ -38,6 +35,7 @@ if not object_exists(sim, self):
     log "Docking ship died"
     ->END
 end_if
+
 # log "Docking ship {self.id}"
 
 player_blob = get_engine_data_set(sim, self)
@@ -49,8 +47,6 @@ if "undocked" == dock_state_string:
     station = closest(self, role("Station"), 600)
     if station is not None:
         set_data_set_value(player_blob, "dock_base_id", to_id(station))
-    end_if
-end_if
 
 dock_stationID = get_data_set_value(player_blob, "dock_base_id", 0)
 dock_station = to_object(dock_stationID)
@@ -63,9 +59,6 @@ if dock_station is not None:
         closeEnough = closeEnough * 1.1
         if distanceValue <= closeEnough:
             set_data_set_value(player_blob, "dock_state", "docked")
-        end_if
-    end_if
-end_if
 
 
 if "docked" == dock_state_string:
@@ -75,7 +68,6 @@ if "docked" == dock_state_string:
     fuel_value = fuel_value + 20
     if fuel_value > 1000:
         fuel_value = 1000
-    end_if
     set_data_set_value(player_blob, "energy", int(fuel_value))
 
     # resupply torps
@@ -88,9 +80,7 @@ if "docked" == dock_state_string:
                 torp_now = torp_now + 1
                 set_data_set_value(player_blob,"torpedo_count", torp_now,torps)
                 set_data_set_value(dock_station_blob,"torpedo_count", tLeft-1, torps)
-            end_if
-        end_if
-    next torps
+    #next torps
 
 
     #repair shields (more than normal)
@@ -105,8 +95,7 @@ if "docked" == dock_state_string:
         sVal = max(0.0, min(sVal + shieldCoeff, sValMax)) # clamp the value
         if changed:
             set_data_set_value(player_blob,"shield_val", sVal, shield)
-        end_if
-    next shield
+
     #repair systems (more than normal)
     for system in range(sbs.SHPSYS.SHIELDS):
         damage = get_data_set_value(player_blob,"system_damage", system)
@@ -115,9 +104,9 @@ if "docked" == dock_state_string:
         damage = max(0.0, min(damage - systemCoeff, maxDamage)) # clamp the value
         if changed:
             set_data_set_value(player_blob,"system_damage", damage, system)
-        end_if
-    next system
-end_if
+
 await delay_sim(5)
+
+x == 1
 -> player_docking
 """
