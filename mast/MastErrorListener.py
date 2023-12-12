@@ -10,6 +10,7 @@ class MastErrorListener(ErrorListener):
         self.msg = ''
         self.count = 0
         self.file_name = file_name
+        self._symbol = None
     
     def syntaxError(self, recognizer, offendingSymbol, line, column, msg, e):        
         self.output.write(msg)
@@ -18,6 +19,7 @@ class MastErrorListener(ErrorListener):
         self.line = line
         self.column = column
         self.count += 1
+
 
 
     def reportAmbiguity(self, recognizer, dfa, startIndex, stopIndex, exact, ambigAlts, configs):

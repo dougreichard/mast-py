@@ -1,6 +1,4 @@
-lexer grammar MastLex;
-//import MastKeywords;
-
+lexer grammar MastLexer;
 //https://github.com/wevre/wry/blob/master/grammars/DentLexer.g4
 
 
@@ -29,31 +27,8 @@ def nextToken(self):
 
 }
 
-
-NEWLINE: ('\r'? '\n' ' '*); //For tabs just switch out ' '* with '\t'*
 WS : [ \t]+ -> skip ;
-
-SCAN    : 'scan';
-TIMEOUT : 'timeout' ;
-FAIL    : 'fail' ;
-SUCCESS : 'success' ;
-YIELD   : 'yield' ;
-COMMS : 'comms';
-CHANGE : 'change';
-FOCUS  : 'focus' ;
-
-GUI             : 'gui' ;
-CHOICE          : 'choice' ;
-STYLE           : 'style' ;
-COLOR           : 'color' ;
-
-ON              : 'on' ;
-END_ON          : 'end_on' ;
-DISCONNECT      : 'disconnect' ;
-NAME_KW         : 'name' ;
-NEXT            : 'next' ;
-MESSAGE         : 'message' ;
-
+NEWLINE: ('\r'? '\n' ' '*); //For tabs just switch out ' '* with '\t'*
 
 
 
@@ -118,7 +93,7 @@ fragment INLINE_CODE_MARKER
         ;
 
 // Things to ignore
-SKIP_              : (COMMENT | INLINE_CODE_MARKER ) -> skip;                 
+SKIP_              : (COMMENT | INLINE_CODE_MARKER  ) -> skip;                 
 //
 ///
 ///
@@ -127,46 +102,46 @@ LABEL_MARKER    : '==' '='+
 // NEWLINE        : ( '\r'? '\n' | '\r' | '\f' );
 // handle characters which failed to match any other token
 //ERROR : . ;
-fragment MATH_OPER       
-                : '+'
-                | '-'
-                | '*'
-                | '/'
-                | '%'
-                | '**'
-                | '//'
-                ;
+// fragment MATH_OPER       
+//                 : '+'
+//                 | '-'
+//                 | '*'
+//                 | '/'
+//                 | '%'
+//                 | '**'
+//                 | '//'
+//                 ;
 
-fragment LOGIC_OPER       
-                : '>'
-                | '<'
-                | '=='
-                | '!='
-                | '<='
-                | '>='
-                | 'and'
-                | 'or'
-                | 'not'
-                | 'is' 'not'
-                | 'is'
-                | 'in' 'not'
-                | 'in'
-                ;
+// fragment LOGIC_OPER       
+//                 : '>'
+//                 | '<'
+//                 | '=='
+//                 | '!='
+//                 | '<='
+//                 | '>='
+//                 | 'and'
+//                 | 'or'
+//                 | 'not'
+//                 | 'is' 'not'
+//                 | 'is'
+//                 | 'in' 'not'
+//                 | 'in'
+//                 ;
 
-fragment BITWISE_OPER       
-                : '&'
-                | '|'
-                | '^'
-                | '~'
-                | '<<'
-                | '>>'
-                ;
+// fragment BITWISE_OPER       
+//                 : '&'
+//                 | '|'
+//                 | '^'
+//                 | '~'
+//                 | '<<'
+//                 | '>>'
+//                 ;
 
 
-OPER            : MATH_OPER
-                | LOGIC_OPER
-                | BITWISE_OPER
-                ;
+// OPER            : MATH_OPER
+//                 | LOGIC_OPER
+//                 | BITWISE_OPER
+//                 ;
 
 //// I don't know how else to allow these as names
 //// as well as arguments for commands
@@ -174,10 +149,6 @@ OPER            : MATH_OPER
 // Which I don't like
 
 
-
-
-NAME            : ID_START ID_CONTINUE*
-                ;
 
 fragment NON_ZERO_DIGIT
                 : [1-9]
@@ -277,6 +248,127 @@ MINUTES_TIME_NUMBER
 :  INT_PART  [m]
  ;
 
+IF_KW : 'if' ;
+IN_KW : 'in' ;
+IS_KW : 'is' ;
+ELIF_KW : 'elif' ;
+ELSE_KW : 'else' ;
+OR_KW : 'or' ;
+AND_KW : 'and' ;
+NOT_KW : 'not' ;
+TRUE_KW : 'True' ;
+FALSE_KW : 'False' ;
+NONE_KW : 'None' ;
+DOT_DOT_DOT : '...' ;
+FOR_KW : 'for' ;
+WHILE_KW : 'while' ;
+MATCH_KW : 'match' ;
+CASE_KW : 'case' ;
+CONTINUE_KW : 'continue' ;
+BREAK_KW : 'break' ;
+
+SHARED_KW :  'shared' ;
+
+AWAIT_KW : 'await' ;
+UNTIL_KW : 'until' ;
+JUMP_ARROW : '->' ;
+JUMP_KW : 'jump' ;
+IMPORT_KW : 'import' ;
+FROM_KW : 'from' ;
+
+END_KW : 'END' ;
+RETURN_KW : 'RETURN' ;
+YIELD_KW : 'YIELD' ;
+FAIL_KW : 'FAIL' ;
+SUCCESS_KW : 'SUCCESS' ;
+
+
+LABEL_REPLACE : 'replace:' ;
+STYLE           : 'style' ;
+COLOR           : 'color' ;
+
+ON_KW              : 'on' ;
+CHANGE_KW          : 'change' ;
+END_ON          : 'end_on' ;
+NAME_KW         : 'name' ;
+
+
+/////////////////
+// OPERATORS + Delim
+COLON_OP : ':' ;
+DSTAR_OP : '**' ;
+STAR_OP : '*' ;
+
+PLUS_OP : '+' ;
+MINUS_OP : '-' ;
+DIV_OP : '/' ;
+INT_DIV_OP : '//' ;
+
+// Bitwise
+MOD_OP : '%' ;
+BAND_OP : '&' ;
+BOR_OP : '|' ;
+BXOR_OP : '^' ;
+BNOT_OP : '~' ;
+SHIFT_LEFT_OP : '<<' ;
+SHIFT_RIGHT_OP : '>>' ;
+MAT_MUL_OP : '@' ;
+
+
+// COMP
+LESS_OP : '<' ;
+GREAT_OP : '>' ;
+COMP_EQ_OP : '==' ;
+NOT_EQ_OP : '!=' | '<>' ;
+LESS_EQ_OP : '<=' ;
+GREAT_EQ_OP : '>=' ;
+
+
+
+COMMA_OP : ',' ;
+DOT_OP : '.' ;
+EQ_OP : '=' ;
+PLUS_EQ_OP : '+=' ;
+MINUS_EQ_OP : '-=' ;
+MUL_EQ_OP : '*=' ;
+DIV_EQ_OP : '/=' ;
+EXP_EQ_OP : '**=' ;
+INT_DIV_EQ_OP : '//=' ;
+// Bitwise
+MOD_EQ_OP : '%=' ;
+BAND_EQ_OP : '&=' ;
+BOR_EQ_OP : '|=' ;
+BXOR_EQ_OP : '^=' ;
+SHIFT_LEFT_EQ_OP : '<<=' ;
+SHIFT_RIGHT_EQ_OP : '>>=' ;
+MAT_MUL_EQ_OP : '@=' ;
+
+
+NAME            : ID_START ID_CONTINUE*
+                ;
+
+
+
+START_DICT : '{'  ;
+START_ARRAY : '[' ;
+START_TUPLE : '('  ;
+END_DICT: '}' ;
+END_ARRAY: ']';
+END_TUPLE: ')';
+//WS_EXPR : [ \t\n] -> skip;
+
+
+
+// START_DICT : '{' -> pushMode(INEPR) ;
+// START_ARRAY : '[' -> pushMode(INEPR) ;
+// START_TUPLE : '(' -> pushMode(INEPR) ;
+
+// mode INEPR;
+
+//         END_DICT: '}' -> skip, popMode ;
+//         END_ARRAY: ']' -> skip, popMode ;
+//         END_TUPLE: ')' -> skip, popMode ;
+//         WS_EXPR : [ \t\n] -> skip;
 
 
 

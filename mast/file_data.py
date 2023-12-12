@@ -32,11 +32,8 @@ file_two = """
 ======== player_docking  ===================
 
 if not object_exists(sim, self):
-    log "Docking ship died"
+    log("Docking ship died")
     ->END
-end_if
-
-# log "Docking ship {self.id}"
 
 player_blob = get_engine_data_set(sim, self)
 dock_state_string = get_data_set_value(player_blob,"dock_state", 0)
@@ -52,7 +49,6 @@ dock_stationID = get_data_set_value(player_blob, "dock_base_id", 0)
 dock_station = to_object(dock_stationID)
 if dock_station is not None:
     if "docking" == dock_state_string:
-        
         # check to see if the player ship is close enough to be docked
         distanceValue = sbs.distance_id(dock_station.id, self.id)
         closeEnough = dock_station.get_space_object(sim).exclusion_radius + self.get_space_object(sim).exclusion_radius
@@ -80,10 +76,7 @@ if "docked" == dock_state_string:
                 torp_now = torp_now + 1
                 set_data_set_value(player_blob,"torpedo_count", torp_now,torps)
                 set_data_set_value(dock_station_blob,"torpedo_count", tLeft-1, torps)
-    #next torps
 
-
-    #repair shields (more than normal)
     shieldCoeff = get_data_set_value(player_blob,"repair_rate_shields",0)
     systemCoeff = get_data_set_value(player_blob,"repair_rate_systems",0)
 
@@ -107,6 +100,6 @@ if "docked" == dock_state_string:
 
 await delay_sim(5)
 
-x == 1
+x[1] == 1
 -> player_docking
 """
